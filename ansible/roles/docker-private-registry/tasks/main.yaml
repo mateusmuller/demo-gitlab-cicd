@@ -1,0 +1,41 @@
+- name: Copy certificate to CA directory
+  copy:
+    src: files/nexus.crt
+    dest: /usr/local/share/ca-certificates/
+    owner: root
+    group: root
+    mode: '0644'
+  notify: 
+    - update ca
+    - restart docker
+  become: yes
+
+- name: Force handlers
+  meta: flush_handlers
+
+- name: Modify /etc/hosts to resolve names
+  lineinfile:
+    path: /etc/hosts
+    insertbefore: '^127'
+    line: '192.168.0.107  gitlab.4fasters.com nexus.4fasters.com registry.nexus.4fasters.com'
+  become: yes
+
+- name: Install pip
+  apt:
+    name: '{{ item }}'
+    update_cache: yes
+  loop:
+    - python3-pip
+    - python-pip
+  become: yes
+
+- name: Install docker api libraries
+  pip:
+    name: docker
+
+- name: Log into private registry and force re-authorization
+  docker_login:
+    registry: '{{ registry_url }}'
+    username: '{{ registry_user }}'
+    password: '{{ registry_pass }}'
+    reauthorize: yes

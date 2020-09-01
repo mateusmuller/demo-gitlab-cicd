@@ -1,0 +1,7 @@
+[all]
+172.10.10.100 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+172.10.10.101 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+172.10.10.102 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+
+[master]
+172.10.10.100 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_ssh_common_args='-o StrictHostKeyChecking=no'

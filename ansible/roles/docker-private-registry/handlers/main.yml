@@ -1,0 +1,10 @@
+---
+  - name: update ca
+    shell: /usr/sbin/update-ca-certificates
+    become: yes
+
+  - name: restart docker
+    service:
+      name: docker
+      state: restarted
+    become: yes

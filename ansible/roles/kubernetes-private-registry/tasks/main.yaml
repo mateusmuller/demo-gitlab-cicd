@@ -1,0 +1,19 @@
+- name: Remove config file
+  file:
+    path: /home/mateus/.kube/config
+    state: absent
+  delegate_to: localhost
+
+- name: Get the config file
+  fetch:
+    src: /home/vagrant/.kube/config
+    dest: /home/mateus/.kube/config
+    flat: yes
+
+- name: Delete secret
+  shell: kubectl delete secret nexus-reg-cred -n java-webapp
+  ignore_errors: yes
+    
+- name: Create secret
+  shell: kubectl create secret generic nexus-reg-cred --from-file=.dockerconfigjson=/home/vagrant/.docker/config.json --type=kubernetes.io/dockerconfigjson -n java-webapp
+  ignore_errors: yes

@@ -1,0 +1,73 @@
+stages:
+  - build
+  - image
+  - publish
+  - clean
+  - deploy
+
+variables:
+  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version -DinstallAtEnd=true -DdeployAtEnd=true"
+  MAVEN_OPTS: "-Dhttps.protocols=TLSv1.2 -Dmaven.repo.local=${CI_PROJECT_DIR}/.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN -Dorg.slf4j.simpleLogger.showDateTime=true -Djava.awt.headless=true"
+  REGISTRY_URL: registry.nexus.4fasters.com
+  K8S_NAMESPACE: java-webapp
+  K8S_DEPLOYMENT: java-webapp-deployment
+  K8S_CONTAINER: java-webapp
+
+project_build:
+  stage: build
+  image: csanchez/maven:3.6.3-jdk-14
+  script:
+    - mvn ${MAVEN_CLI_OPTS} compile
+    - mvn ${MAVEN_CLI_OPTS} test
+    - mvn ${MAVEN_CLI_OPTS} package
+  cache:
+    key: ${CI_PROJECT_NAME}
+    paths:
+      - .m2/repository
+    policy: pull-push
+  artifacts:
+    paths:
+      - /builds/root/${CI_PROJECT_NAME}/target/*.war
+    expire_in: 30 min
+
+docker_image:
+  stage: image
+  image: docker:stable-dind
+  before_script:
+    - docker login --username ${REGISTRY_USER} --password ${REGISTRY_PASS} ${REGISTRY_URL}
+  script:
+    - docker build --file Dockerfile --tag ${REGISTRY_URL}/${CI_PROJECT_NAME}:${CI_PIPELINE_ID} .
+    - docker build --file Dockerfile --tag ${REGISTRY_URL}/${CI_PROJECT_NAME}:latest .
+  retry: 2
+
+docker_publish:
+  stage: publish
+  image: docker:stable-dind
+  before_script:
+    - docker login --username ${REGISTRY_USER} --password ${REGISTRY_PASS} ${REGISTRY_URL}
+  script:
+    - docker push ${REGISTRY_URL}/${CI_PROJECT_NAME}:${CI_PIPELINE_ID}
+    - docker push ${REGISTRY_URL}/${CI_PROJECT_NAME}:latest
+  retry: 2
+
+docker_clean:
+  stage: clean
+  image: docker:stable-dind
+  script:
+    - docker image rm --force ${REGISTRY_URL}/${CI_PROJECT_NAME}:${CI_PIPELINE_ID}
+    - docker image rm --force ${REGISTRY_URL}/${CI_PROJECT_NAME}:latest
+  retry: 2
+
+kubernetes_deploy:
+  stage: deploy
+  image:
+    name: bitnami/kubectl:1.18
+    entrypoint: [""]
+  before_script:
+    - echo ${K8S_CONFIG} | base64 -di > config
+    - export KUBECONFIG="config"
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - kubectl set image --namespace ${K8S_NAMESPACE} deployment/${K8S_DEPLOYMENT} ${K8S_CONTAINER}=${REGISTRY_URL}/${CI_PROJECT_NAME}:${CI_PIPELINE_ID} --record
+  retry: 2

@@ -1,0 +1,14 @@
+- name: Create namespace for application
+  k8s:
+    state: present
+    definition: "{{ lookup('file', 'files/namespace.yaml') }}"
+
+- name: Create deployment for application
+  k8s:
+    state: present
+    definition: "{{ lookup('file', 'files/deployment.yaml') }}"
+
+- name: Create service for application
+  k8s:
+    state: present
+    definition: "{{ lookup('file', 'files/service.yaml') }}"

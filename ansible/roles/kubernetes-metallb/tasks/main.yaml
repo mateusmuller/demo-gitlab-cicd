@@ -1,0 +1,25 @@
+- name: Install openshift and kubernetes libraries
+  pip:
+    name:
+    - kubernetes
+    - openshift
+
+- name: Create namespace for metallb
+  k8s:
+    state: present
+    definition: "{{ lookup('file', 'files/namespace.yaml') }}"
+
+- name: Deploy metallb
+  k8s:
+    state: present
+    definition: "{{ lookup('file', 'files/metallb.yaml') }}"
+
+- name: Create metallb secret
+  k8s:
+    state: present
+    definition: "{{ lookup('file', 'files/secret.yaml') }}"
+
+- name: Create configmap with load balancer IPs for metallb
+  k8s:
+    state: present
+    definition: "{{ lookup('file', 'files/configmap.yaml') }}"

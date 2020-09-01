@@ -1,0 +1,11 @@
+- name: Distribute certificates and login to docker
+  hosts: all
+  roles:
+    - docker-private-registry
+
+- name: Configure k8s private registry
+  hosts: master
+  roles:
+    - kubernetes-metallb
+    - kubernetes-deployment
+    - kubernetes-private-registry

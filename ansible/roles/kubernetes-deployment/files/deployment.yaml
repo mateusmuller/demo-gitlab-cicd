@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: java-webapp
+  name: java-webapp-deployment
+  namespace: java-webapp
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: java-webapp
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: java-webapp
+    spec:
+      containers:
+      - image: registry.nexus.4fasters.com/demo-webapp:latest
+        name: java-webapp
+        resources: {}
+      imagePullSecrets:
+      - name: nexus-reg-cred
+status: {}
