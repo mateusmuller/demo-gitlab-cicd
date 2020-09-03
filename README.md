@@ -73,7 +73,7 @@ Both GitLab and Nexus will be running after starting the docker compose applicat
 On the root directory run the following command:
 
 ```
-$ git clone 
+$ git clone https://github.com/mateusmuller/demo-gitlab-cicd
 $ docker-compose up -d
 ```
 
